@@ -18,7 +18,7 @@
 //! will be in implementing the [`FromByteArray`] trait.
 //!
 //! A type that implements the [`ReadableRegister`] trait can then be used with provided utility methods
-//! such as those provided by the [i2c] or [`spi`] modules.
+//! such as those provided by the [`i2c`] or [`spi`] modules.
 //!
 //! #### Register Implementation Example
 //!
@@ -64,7 +64,7 @@
 //! will be in implementing the [`ToByteArray`] trait.
 //!
 //! A type that implements the [`WritableRegister`] trait can then be used with provided utility methods
-//! such as those provided by the [i2c] or [`spi`] modules.
+//! such as those provided by the [`i2c`] or [`spi`] modules.
 //!
 //! #### Register Implementation Example
 //!
