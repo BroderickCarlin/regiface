@@ -1,4 +1,4 @@
-//! A collection of utility functions for interfacing with registers across an I2C bus
+//! A collection of utility functions for interfacing with registers across a SPI bus
 //!
 //! Provided are both blocking and async variants of all functions
 
@@ -11,13 +11,12 @@ use crate::{
 pub mod r#async {
     use super::*;
 
-    pub async fn read_register<D, A, R>(
+    /// Read the specified register value from the provided [`SpiDevice`](embedded_hal_async::spi::SpiDevice)
+    pub async fn read_register<D, R>(
         device: &mut D,
-        device_addr: A,
     ) -> Result<R, ReadRegisterError<D::Error, R::Error>>
     where
-        A: embedded_hal_async::i2c::AddressMode,
-        D: embedded_hal_async::i2c::I2c<A>,
+        D: embedded_hal_async::spi::SpiDevice,
         R: ReadableRegister,
     {
         let mut buf = <R as FromByteArray>::Array::new();
@@ -26,21 +25,23 @@ pub mod r#async {
         let reg_id = R::readable_id().to_bytes().unwrap();
 
         device
-            .write_read(device_addr, reg_id.as_ref(), buf.as_mut())
+            .transaction(&mut [
+                embedded_hal_async::spi::Operation::Write(reg_id.as_ref()),
+                embedded_hal_async::spi::Operation::Read(buf.as_mut()),
+            ])
             .await
             .map_err(ReadRegisterError::BusError)?;
 
         R::from_bytes(buf).map_err(ReadRegisterError::DeserializationError)
     }
 
-    pub async fn write_register<D, A, R>(
+    /// Write the specified register value to the provided [`SpiDevice`](embedded_hal_async::spi::SpiDevice)
+    pub async fn write_register<D, R>(
         device: &mut D,
-        device_addr: A,
         register: R,
     ) -> Result<(), WriteRegisterError<D::Error, R::Error>>
     where
-        A: embedded_hal_async::i2c::AddressMode,
-        D: embedded_hal_async::i2c::I2c<A>,
+        D: embedded_hal_async::spi::SpiDevice,
         R: WritableRegister,
     {
         let buf = register
@@ -51,13 +52,10 @@ pub mod r#async {
         let reg_id = R::writeable_id().to_bytes().unwrap();
 
         device
-            .transaction(
-                device_addr,
-                &mut [
-                    embedded_hal_async::i2c::Operation::Write(reg_id.as_ref()),
-                    embedded_hal_async::i2c::Operation::Write(buf.as_ref()),
-                ],
-            )
+            .transaction(&mut [
+                embedded_hal_async::spi::Operation::Write(reg_id.as_ref()),
+                embedded_hal_async::spi::Operation::Write(buf.as_ref()),
+            ])
             .await
             .map_err(WriteRegisterError::BusError)
     }
@@ -66,13 +64,10 @@ pub mod r#async {
 pub mod blocking {
     use super::*;
 
-    pub fn read_register<D, A, R>(
-        device: &mut D,
-        device_addr: A,
-    ) -> Result<R, ReadRegisterError<D::Error, R::Error>>
+    /// Read the specified register value from the provided [`SpiDevice`](embedded_hal::spi::SpiDevice)
+    pub fn read_register<D, R>(device: &mut D) -> Result<R, ReadRegisterError<D::Error, R::Error>>
     where
-        A: embedded_hal::i2c::AddressMode,
-        D: embedded_hal::i2c::I2c<A>,
+        D: embedded_hal::spi::SpiDevice,
         R: ReadableRegister,
     {
         let mut buf = <R as FromByteArray>::Array::new();
@@ -81,20 +76,22 @@ pub mod blocking {
         let reg_id = R::readable_id().to_bytes().unwrap();
 
         device
-            .write_read(device_addr, reg_id.as_ref(), buf.as_mut())
+            .transaction(&mut [
+                embedded_hal::spi::Operation::Write(reg_id.as_ref()),
+                embedded_hal::spi::Operation::Read(buf.as_mut()),
+            ])
             .map_err(ReadRegisterError::BusError)?;
 
         R::from_bytes(buf).map_err(ReadRegisterError::DeserializationError)
     }
 
-    pub fn write_register<D, A, R>(
+    /// Write the specified register value to the provided [`SpiDevice`](embedded_hal::spi::SpiDevice)
+    pub fn write_register<D, R>(
         device: &mut D,
-        device_addr: A,
         register: R,
     ) -> Result<(), WriteRegisterError<D::Error, R::Error>>
     where
-        A: embedded_hal::i2c::AddressMode,
-        D: embedded_hal::i2c::I2c<A>,
+        D: embedded_hal::spi::SpiDevice,
         R: WritableRegister,
     {
         let buf = register
@@ -105,13 +102,10 @@ pub mod blocking {
         let reg_id = R::writeable_id().to_bytes().unwrap();
 
         device
-            .transaction(
-                device_addr,
-                &mut [
-                    embedded_hal_async::i2c::Operation::Write(reg_id.as_ref()),
-                    embedded_hal_async::i2c::Operation::Write(buf.as_ref()),
-                ],
-            )
+            .transaction(&mut [
+                embedded_hal::spi::Operation::Write(reg_id.as_ref()),
+                embedded_hal::spi::Operation::Write(buf.as_ref()),
+            ])
             .map_err(WriteRegisterError::BusError)
     }
 }
