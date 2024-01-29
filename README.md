@@ -1,12 +1,12 @@
  This crate provides a handful of utility types for writing abstractions for interfacing with register based devices. Most commonly, this would be utilized when writing drivers for external peripherals within an embedded environment. As such, some utility functions are provided for reading and writing registers on devices across I2C or SPI buses.
 
-This crate provides a single trait to be implemented by all types that represent a value that is stored within an addressable register, aptly named [`Register`]. This trait provides nothing more than a method for retrieving the ID associated with the given register.
+This crate provides a single trait to be implemented by all types that represent a value that is stored within an addressable register, aptly named `Register`. This trait provides nothing more than a method for retrieving the ID associated with the given register.
 
 ### Readable Registers
 
 A register in which values can be retrieved from, or read from, is represented as any type that implements the `ReadableRegister` trait. This trait is very little more than just a marker trait, but it represents a type that is both a `Register` and that can be created from a byte array through the `FromByteArray` trait. The bulk of the work in writing a type that can be read from a register will be in implementing the `FromByteArray` trait.
 
-A type that implements the [`ReadableRegister`] trait can then be used with provided utility methods such as those provided by the `i2c` or `spi` modules.
+A type that implements the `ReadableRegister` trait can then be used with provided utility methods such as those provided by the `i2c` or `spi` modules.
 
 #### Register Implementation Example
 
