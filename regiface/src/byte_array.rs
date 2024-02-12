@@ -89,7 +89,7 @@ impl FromByteArray for u128 {
     }
 }
 
-#[cfg(feature="packed_struct")]
+#[cfg(feature = "packed_struct")]
 impl<V, const LEN: usize> FromByteArray for V
 where
     V: packed_struct::PackedStruct<ByteArray = [u8; LEN]> + crate::Register,
@@ -162,7 +162,7 @@ impl ToByteArray for u128 {
     }
 }
 
-#[cfg(feature="packed_struct")]
+#[cfg(feature = "packed_struct")]
 impl<V, const LEN: usize> ToByteArray for V
 where
     V: packed_struct::PackedStruct<ByteArray = [u8; LEN]> + crate::Register,
