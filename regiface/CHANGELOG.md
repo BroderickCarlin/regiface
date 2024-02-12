@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4](https://github.com/BroderickCarlin/regiface/compare/regiface-v0.1.3...regiface-v0.1.4) - 2024-02-12
+
+### Fixed
+- Fix packed_struct feature not propertly cfg gated
+
+### Other
+- rustfmt fix
+- Merge remote-tracking branch 'origin/main'
+
 ## [0.1.3](https://github.com/BroderickCarlin/regiface/compare/regiface-v0.1.2...regiface-v0.1.3) - 2024-02-12
 
 ### Fixed
