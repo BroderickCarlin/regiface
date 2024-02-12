@@ -89,10 +89,10 @@ impl FromByteArray for u128 {
     }
 }
 
-#[cfg(packed_struct)]
-impl<V, const LEN: usize> FromByteArray<LEN> for V
+#[cfg(feature="packed_struct")]
+impl<V, const LEN: usize> FromByteArray for V
 where
-    V: packed_struct::PackedStruct<ByteArray = [u8; LEN]>,
+    V: packed_struct::PackedStruct<ByteArray = [u8; LEN]> + crate::Register,
 {
     type Error = packed_struct::PackingError;
     type Array = [u8; LEN];
@@ -162,10 +162,10 @@ impl ToByteArray for u128 {
     }
 }
 
-#[cfg(packed_struct)]
-impl<V, const LEN: usize> ToByteArray<LEN> for V
+#[cfg(feature="packed_struct")]
+impl<V, const LEN: usize> ToByteArray for V
 where
-    V: packed_struct::PackedStruct<ByteArray = [u8; LEN]>,
+    V: packed_struct::PackedStruct<ByteArray = [u8; LEN]> + crate::Register,
 {
     type Error = packed_struct::PackingError;
     type Array = [u8; LEN];
