@@ -4,7 +4,6 @@ description = "This crate implements the macros for the regiface crate"
 version = "0.1.1"
 edition = "2021"
 authors = ["Broderick Carlin <broderick.carlin@gmail.com>"]
-readme = "README.md"
 repository = "https://github.com/BroderickCarlin/regiface"
 license = "MIT OR Apache-2.0"
 

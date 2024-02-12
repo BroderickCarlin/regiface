@@ -4,7 +4,7 @@ description = "A crate to ease development of interfacing with registers on embe
 version = "0.1.1"
 edition = "2021"
 authors = ["Broderick Carlin <broderick.carlin@gmail.com>"]
-readme = "README.md"
+readme = "../README.md"
 repository = "https://github.com/BroderickCarlin/regiface"
 license = "MIT OR Apache-2.0"
 
