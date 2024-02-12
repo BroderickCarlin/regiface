@@ -100,6 +100,7 @@
 //! ```
 
 pub use byte_array::{FromByteArray, ToByteArray};
+pub use regiface_macros as derive;
 
 pub mod byte_array;
 pub mod errors;
@@ -123,6 +124,24 @@ pub trait Register {
 }
 
 /// A marker trait that represents a type that can be retrieved by reading a register
+///
+/// This trait can be manually implemented, or may be derived as such
+///
+/// ```
+/// use regiface::derive::ReadableRegister;
+///
+/// #[derive(ReadableRegister)]
+/// pub struct MyRegister {
+///     foo: u8
+/// }
+/// # impl regiface::Register for MyRegister {
+/// # type IdType = u8;
+/// # fn id() -> Self::IdType {42}}
+/// # impl regiface::FromByteArray for MyRegister {
+/// # type Error = String;
+/// # type Array = [u8; 1];
+/// # fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {unimplemented!()}}
+/// ```
 pub trait ReadableRegister: Register + FromByteArray {
     /// Some implementations may specify a different register ID to be used when reading the register.
     ///
@@ -135,6 +154,24 @@ pub trait ReadableRegister: Register + FromByteArray {
 }
 
 /// A marker trait that represents a type that can be written into a register
+///
+/// This trait can be manually implemented, or may be derived as such
+///
+/// ```
+/// use regiface::derive::WritableRegister;
+///
+/// #[derive(WritableRegister)]
+/// pub struct MyRegister {
+///     foo: u8
+/// }
+/// # impl regiface::Register for MyRegister {
+/// # type IdType = u8;
+/// # fn id() -> Self::IdType {42}}
+/// # impl regiface::ToByteArray for MyRegister {
+/// # type Error = String;
+/// # type Array = [u8; 1];
+/// # fn to_bytes(self) -> Result<Self::Array, Self::Error> {unimplemented!()}}
+/// ```
 pub trait WritableRegister: Register + ToByteArray {
     /// Some implementations may specify a different register ID to be used when writing the register.
     ///
