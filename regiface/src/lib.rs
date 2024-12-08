@@ -23,23 +23,14 @@
 //! #### Register Implementation Example
 //!
 //! ```
-//! use regiface::{Register, ReadableRegister, FromByteArray};
+//! use regiface::{register, ReadableRegister, FromByteArray};
 //!
-//! // A type we will use to represent some fictional register
-//! struct MyRegister {
+//! #[register(42u8)]
+//! #[derive(ReadableRegister, Debug)]
+//! pub struct MyRegister {
 //!     value: u8
 //! }
 //!
-//! // Implement the Register trait, and specify it has an ID of 42u8
-//! impl Register for MyRegister {
-//!     type IdType = u8;
-//!
-//!     fn id() -> Self::IdType {
-//!         42
-//!     }
-//! }
-//!
-//! // Implement the FromByteArray trait, and specify it can be converted from a 1-byte array
 //! impl FromByteArray for MyRegister {
 //!     type Error = core::convert::Infallible;
 //!     type Array = [u8; 1];
@@ -50,9 +41,6 @@
 //!         })
 //!     }
 //! }
-//!
-//! // Indicate this is a readable register!
-//! impl ReadableRegister for MyRegister {}
 //! ```
 //!
 //! ### Writable Registers
@@ -69,23 +57,14 @@
 //! #### Register Implementation Example
 //!
 //! ```
-//! use regiface::{Register, WritableRegister, ToByteArray};
+//! use regiface::{register, WritableRegister, ToByteArray};
 //!
-//! // A type we will use to represent some fictional register
-//! struct MyRegister {
+//! #[register(42u8)]
+//! #[derive(WritableRegister, Debug)]
+//! pub struct MyRegister {
 //!     value: u8
 //! }
 //!
-//! // Implement the Register trait, and specify it has an ID of 42u8
-//! impl Register for MyRegister {
-//!     type IdType = u8;
-//!
-//!     fn id() -> Self::IdType {
-//!         42
-//!     }
-//! }
-//!
-//! // Implement the ToByteArray trait, and specify it can be converted to a 1-byte array
 //! impl ToByteArray for MyRegister {
 //!     type Error = core::convert::Infallible;
 //!     type Array = [u8; 1];
@@ -94,13 +73,10 @@
 //!         Ok([self.value])
 //!     }
 //! }
-//!
-//! // Indicate this is a readable register!
-//! impl WritableRegister for MyRegister {}
 //! ```
 
 pub use byte_array::{FromByteArray, ToByteArray};
-pub use regiface_macros as derive;
+pub use regiface_macros::{register, ReadableRegister, WritableRegister};
 
 pub mod byte_array;
 pub mod errors;
@@ -128,19 +104,22 @@ pub trait Register {
 /// This trait can be manually implemented, or may be derived as such
 ///
 /// ```
-/// use regiface::derive::ReadableRegister;
+/// use regiface::{register, ReadableRegister, FromByteArray};
 ///
-/// #[derive(ReadableRegister)]
+/// #[register(42u8)]
+/// #[derive(ReadableRegister, Debug)]
 /// pub struct MyRegister {
 ///     foo: u8
 /// }
-/// # impl regiface::Register for MyRegister {
-/// # type IdType = u8;
-/// # fn id() -> Self::IdType {42}}
-/// # impl regiface::FromByteArray for MyRegister {
-/// # type Error = String;
-/// # type Array = [u8; 1];
-/// # fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {unimplemented!()}}
+///
+/// impl FromByteArray for MyRegister {
+///     type Error = core::convert::Infallible;
+///     type Array = [u8; 1];
+///
+///     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+///         Ok(Self { foo: bytes[0] })
+///     }
+/// }
 /// ```
 pub trait ReadableRegister: Register + FromByteArray {
     /// Some implementations may specify a different register ID to be used when reading the register.
@@ -158,19 +137,22 @@ pub trait ReadableRegister: Register + FromByteArray {
 /// This trait can be manually implemented, or may be derived as such
 ///
 /// ```
-/// use regiface::derive::WritableRegister;
+/// use regiface::{register, WritableRegister, ToByteArray};
 ///
-/// #[derive(WritableRegister)]
+/// #[register(42u8)]
+/// #[derive(WritableRegister, Debug)]
 /// pub struct MyRegister {
 ///     foo: u8
 /// }
-/// # impl regiface::Register for MyRegister {
-/// # type IdType = u8;
-/// # fn id() -> Self::IdType {42}}
-/// # impl regiface::ToByteArray for MyRegister {
-/// # type Error = String;
-/// # type Array = [u8; 1];
-/// # fn to_bytes(self) -> Result<Self::Array, Self::Error> {unimplemented!()}}
+///
+/// impl ToByteArray for MyRegister {
+///     type Error = core::convert::Infallible;
+///     type Array = [u8; 1];
+///
+///     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
+///         Ok([self.foo])
+///     }
+/// }
 /// ```
 pub trait WritableRegister: Register + ToByteArray {
     /// Some implementations may specify a different register ID to be used when writing the register.
