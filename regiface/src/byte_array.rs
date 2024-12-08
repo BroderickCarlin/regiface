@@ -131,7 +131,7 @@ impl ToByteArray for u16 {
     type Array = [u8; 2];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok(self.to_be_bytes())
+        Ok(self.to_le_bytes())
     }
 }
 
@@ -140,7 +140,7 @@ impl ToByteArray for u32 {
     type Array = [u8; 4];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok(self.to_be_bytes())
+        Ok(self.to_le_bytes())
     }
 }
 
@@ -149,7 +149,7 @@ impl ToByteArray for u64 {
     type Array = [u8; 8];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok(self.to_be_bytes())
+        Ok(self.to_le_bytes())
     }
 }
 
@@ -158,7 +158,7 @@ impl ToByteArray for u128 {
     type Array = [u8; 16];
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-        Ok(self.to_be_bytes())
+        Ok(self.to_le_bytes())
     }
 }
 

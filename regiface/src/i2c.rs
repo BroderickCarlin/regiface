@@ -4,17 +4,18 @@
 
 use crate::{
     byte_array::ByteArray as _,
-    errors::{ReadRegisterError, WriteRegisterError},
+    errors::{ReadRegisterError, ReadRegisterResult, WriteRegisterError, WriteRegisterResult},
     FromByteArray, ReadableRegister, ToByteArray as _, WritableRegister,
 };
 
 pub mod r#async {
     use super::*;
 
+    /// A utility method to reading registers from an I2C device, asynchronously
     pub async fn read_register<D, A, R>(
         device: &mut D,
         device_addr: A,
-    ) -> Result<R, ReadRegisterError<D::Error, R::Error>>
+    ) -> ReadRegisterResult<D::Error, R>
     where
         A: embedded_hal_async::i2c::AddressMode,
         D: embedded_hal_async::i2c::I2c<A>,
@@ -23,7 +24,7 @@ pub mod r#async {
         let mut buf = <R as FromByteArray>::Array::new();
 
         // Register ID types have compiler enforced infallible byte conversions, thus this unwrap is safe
-        let reg_id = R::readable_id().to_bytes().unwrap();
+        let reg_id = unsafe { R::readable_id().to_bytes().unwrap_unchecked() };
 
         device
             .write_read(device_addr, reg_id.as_ref(), buf.as_mut())
@@ -33,11 +34,12 @@ pub mod r#async {
         R::from_bytes(buf).map_err(ReadRegisterError::DeserializationError)
     }
 
+    /// A utility method to write registers to an I2C device, asynchronously
     pub async fn write_register<D, A, R>(
         device: &mut D,
         device_addr: A,
         register: R,
-    ) -> Result<(), WriteRegisterError<D::Error, R::Error>>
+    ) -> WriteRegisterResult<D::Error, R>
     where
         A: embedded_hal_async::i2c::AddressMode,
         D: embedded_hal_async::i2c::I2c<A>,
@@ -48,7 +50,7 @@ pub mod r#async {
             .map_err(WriteRegisterError::SerializationError)?;
 
         // Register ID types have compiler enforced infallible byte conversions, thus this unwrap is safe
-        let reg_id = R::writeable_id().to_bytes().unwrap();
+        let reg_id = unsafe { R::writeable_id().to_bytes().unwrap_unchecked() };
 
         device
             .transaction(
@@ -66,10 +68,8 @@ pub mod r#async {
 pub mod blocking {
     use super::*;
 
-    pub fn read_register<D, A, R>(
-        device: &mut D,
-        device_addr: A,
-    ) -> Result<R, ReadRegisterError<D::Error, R::Error>>
+    /// A utility method to reading registers from an I2C device, in a blocking manner
+    pub fn read_register<D, A, R>(device: &mut D, device_addr: A) -> ReadRegisterResult<D::Error, R>
     where
         A: embedded_hal::i2c::AddressMode,
         D: embedded_hal::i2c::I2c<A>,
@@ -78,7 +78,7 @@ pub mod blocking {
         let mut buf = <R as FromByteArray>::Array::new();
 
         // Register ID types have compiler enforced infallible byte conversions, thus this unwrap is safe
-        let reg_id = R::readable_id().to_bytes().unwrap();
+        let reg_id = unsafe { R::readable_id().to_bytes().unwrap_unchecked() };
 
         device
             .write_read(device_addr, reg_id.as_ref(), buf.as_mut())
@@ -87,11 +87,12 @@ pub mod blocking {
         R::from_bytes(buf).map_err(ReadRegisterError::DeserializationError)
     }
 
+    /// A utility method to write registers to an I2C device, in a blocking manner
     pub fn write_register<D, A, R>(
         device: &mut D,
         device_addr: A,
         register: R,
-    ) -> Result<(), WriteRegisterError<D::Error, R::Error>>
+    ) -> WriteRegisterResult<D::Error, R>
     where
         A: embedded_hal::i2c::AddressMode,
         D: embedded_hal::i2c::I2c<A>,
@@ -102,7 +103,7 @@ pub mod blocking {
             .map_err(WriteRegisterError::SerializationError)?;
 
         // Register ID types have compiler enforced infallible byte conversions, thus this unwrap is safe
-        let reg_id = R::writeable_id().to_bytes().unwrap();
+        let reg_id = unsafe { R::writeable_id().to_bytes().unwrap_unchecked() };
 
         device
             .transaction(
