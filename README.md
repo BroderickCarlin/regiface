@@ -81,6 +81,155 @@ impl FromByteArray for MyRegister {
 impl ReadableRegister for MyRegister {}
 ```
 
+### Complete Example
+
+Here's a complete example showing how to use registers and commands with both I2C and SPI devices:
+
+```rust
+use regiface::{
+    register, Command, FromByteArray, ReadableRegister, ToByteArray, WritableRegister,
+    NoParameters,
+};
+
+// Temperature register that can be read
+#[register(0x00)]
+#[derive(ReadableRegister)]
+struct Temperature {
+    celsius: f32,
+}
+
+impl FromByteArray for Temperature {
+    type Array = [u8; 4];
+    type Error = &'static str;
+
+    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        Ok(Self {
+            celsius: f32::from_be_bytes(bytes),
+        })
+    }
+}
+
+// Configuration register that can be written
+#[register(0x01)]
+#[derive(WritableRegister)]
+struct Configuration {
+    sample_rate: u16,
+    enabled: bool,
+}
+
+impl ToByteArray for Configuration {
+    type Array = [u8; 3];
+    type Error = &'static str;
+
+    fn to_bytes(&self) -> Result<Self::Array, Self::Error> {
+        let mut bytes = [0u8; 3];
+        bytes[0..2].copy_from_slice(&self.sample_rate.to_be_bytes());
+        bytes[2] = self.enabled as u8;
+        Ok(bytes)
+    }
+}
+
+// Command to perform calibration
+struct Calibrate;
+
+#[derive(Default)]
+struct CalibrationParams {
+    reference_temp: f32,
+}
+
+impl ToByteArray for CalibrationParams {
+    type Array = [u8; 4];
+    type Error = &'static str;
+
+    fn to_bytes(&self) -> Result<Self::Array, Self::Error> {
+        Ok(self.reference_temp.to_be_bytes())
+    }
+}
+
+struct CalibrationResponse {
+    offset: f32,
+}
+
+impl FromByteArray for CalibrationResponse {
+    type Array = [u8; 4];
+    type Error = &'static str;
+
+    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        Ok(Self {
+            offset: f32::from_be_bytes(bytes),
+        })
+    }
+}
+
+impl Command for Calibrate {
+    type CommandParameters = CalibrationParams;
+    type ResponseParameters = CalibrationResponse;
+
+    fn id() -> regiface::id::RegisterId {
+        0xF0.into()
+    }
+
+    fn invoking_parameters(&self) -> Self::CommandParameters {
+        CalibrationParams {
+            reference_temp: 25.0,
+        }
+    }
+}
+
+// Using with I2C (async)
+use embedded_hal_async::i2c::I2c;
+
+async fn use_i2c_device<D: I2c<u8>>(i2c: &mut D) {
+    const DEVICE_ADDR: u8 = 0x48;
+
+    // Read temperature (type inference)
+    let temp: Temperature = regiface::i2c::r#async::read_register(i2c, DEVICE_ADDR)
+        .await
+        .unwrap();
+    println!("Temperature: {}°C", temp.celsius);
+
+    // Write configuration
+    let config = Configuration {
+        sample_rate: 100,
+        enabled: true,
+    };
+    regiface::i2c::r#async::write_register(i2c, DEVICE_ADDR, config)
+        .await
+        .unwrap();
+
+    // Execute calibration command
+    let result: CalibrationResponse = regiface::i2c::r#async::invoke_command(
+        i2c,
+        DEVICE_ADDR,
+        Calibrate,
+    )
+    .await
+    .unwrap();
+    println!("Calibration offset: {}", result.offset);
+}
+
+// Using with SPI (blocking)
+use embedded_hal::spi::SpiDevice;
+
+fn use_spi_device<D: SpiDevice>(spi: &mut D) {
+    // Read temperature (type inference)
+    let temp: Temperature = regiface::spi::blocking::read_register(spi).unwrap();
+    println!("Temperature: {}°C", temp.celsius);
+
+    // Write configuration
+    let config = Configuration {
+        sample_rate: 100,
+        enabled: true,
+    };
+    regiface::spi::blocking::write_register(spi, config).unwrap();
+
+    // Execute calibration command
+    let result: CalibrationResponse =
+        regiface::spi::blocking::invoke_command(spi, Calibrate).unwrap();
+    println!("Calibration offset: {}", result.offset);
+}
+```
+
 ### Readable Registers
 
 A register in which values can be retrieved from, or read from, is represented as any type that implements the `ReadableRegister` trait. This trait is very little more than just a marker trait, but it represents a type that is both a `Register` and that can be created from a byte array through the `FromByteArray` trait. The bulk of the work in writing a type that can be read from a register will be in implementing the `FromByteArray` trait.
@@ -97,35 +246,4 @@ A type that implements the `WritableRegister` trait can then be used with provid
 
 A command represents an invokable action with optional parameters and response. Commands are implemented using the `Command` trait, which specifies both the command parameters and expected response type. For commands or responses without parameters, the `NoParameters` type can be used.
 
-```rust
-use regiface::{Command, ToByteArray, FromByteArray, NoParameters};
-
-struct GetTemperature;
-
-impl Command for GetTemperature {
-    type IdType = u8;
-    type CommandParameters = NoParameters;
-    type ResponseParameters = Temperature;
-
-    fn id() -> Self::IdType {
-        0x42
-    }
-
-    fn invoking_parameters(self) -> Self::CommandParameters {
-        NoParameters::default()
-    }
-}
-
-struct Temperature {
-    celsius: f32
-}
-
-impl FromByteArray for Temperature {
-    type Error = core::convert::Infallible;
-    type Array = [u8; 4];
-
-    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
-        let celsius = f32::from_be_bytes(bytes);
-        Ok(Self { celsius })
-    }
-}
+The command's parameters must implement `ToByteArray` for serialization, and its response type must implement `FromByteArray` for deserialization. The command itself specifies an ID that uniquely identifies it to the device.
