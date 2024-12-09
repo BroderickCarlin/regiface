@@ -4,8 +4,9 @@
 
 use crate::{
     byte_array::ByteArray as _,
+    errors::CommandError,
     errors::{ReadRegisterError, WriteRegisterError},
-    FromByteArray, ReadableRegister, ToByteArray as _, WritableRegister,
+    Command, FromByteArray, ReadableRegister, ToByteArray, WritableRegister,
 };
 
 pub mod r#async {
@@ -61,6 +62,48 @@ pub mod r#async {
             .await
             .map_err(WriteRegisterError::BusError)
     }
+
+    #[allow(clippy::type_complexity)]
+    pub async fn invoke_command<D, A, C>(
+        device: &mut D,
+        device_addr: A,
+        cmd: C,
+    ) -> Result<
+        C::ResponseParameters,
+        CommandError<
+            D::Error,
+            <C::CommandParameters as ToByteArray>::Error,
+            <C::ResponseParameters as FromByteArray>::Error,
+        >,
+    >
+    where
+        A: embedded_hal_async::i2c::AddressMode,
+        D: embedded_hal_async::i2c::I2c<A>,
+        C: Command,
+    {
+        let cmd_buf = cmd
+            .invoking_parameters()
+            .to_bytes()
+            .map_err(CommandError::SerializationError)?;
+        let mut resp_buf = <C::ResponseParameters as FromByteArray>::Array::new();
+
+        // Register ID types have compiler enforced infallible byte conversions, thus this unwrap is safe
+        let reg_id = unsafe { C::id().to_bytes().unwrap_unchecked() };
+
+        device
+            .transaction(
+                device_addr,
+                &mut [
+                    embedded_hal::i2c::Operation::Write(reg_id.as_ref()),
+                    embedded_hal::i2c::Operation::Write(cmd_buf.as_ref()),
+                    embedded_hal::i2c::Operation::Read(resp_buf.as_mut()),
+                ],
+            )
+            .await
+            .map_err(CommandError::BusError)?;
+
+        C::ResponseParameters::from_bytes(resp_buf).map_err(CommandError::DeserializationError)
+    }
 }
 
 pub mod blocking {
@@ -113,5 +156,46 @@ pub mod blocking {
                 ],
             )
             .map_err(WriteRegisterError::BusError)
+    }
+
+    #[allow(clippy::type_complexity)]
+    pub fn invoke_command<D, A, C>(
+        device: &mut D,
+        device_addr: A,
+        cmd: C,
+    ) -> Result<
+        C::ResponseParameters,
+        CommandError<
+            D::Error,
+            <C::CommandParameters as ToByteArray>::Error,
+            <C::ResponseParameters as FromByteArray>::Error,
+        >,
+    >
+    where
+        A: embedded_hal::i2c::AddressMode,
+        D: embedded_hal::i2c::I2c<A>,
+        C: Command,
+    {
+        let cmd_buf = cmd
+            .invoking_parameters()
+            .to_bytes()
+            .map_err(CommandError::SerializationError)?;
+        let mut resp_buf = <C::ResponseParameters as FromByteArray>::Array::new();
+
+        // Register ID types have compiler enforced infallible byte conversions, thus this unwrap is safe
+        let reg_id = unsafe { C::id().to_bytes().unwrap_unchecked() };
+
+        device
+            .transaction(
+                device_addr,
+                &mut [
+                    embedded_hal::i2c::Operation::Write(reg_id.as_ref()),
+                    embedded_hal::i2c::Operation::Write(cmd_buf.as_ref()),
+                    embedded_hal::i2c::Operation::Read(resp_buf.as_mut()),
+                ],
+            )
+            .map_err(CommandError::BusError)?;
+
+        C::ResponseParameters::from_bytes(resp_buf).map_err(CommandError::DeserializationError)
     }
 }

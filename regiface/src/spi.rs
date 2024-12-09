@@ -4,8 +4,9 @@
 
 use crate::{
     byte_array::ByteArray as _,
+    errors::CommandError,
     errors::{ReadRegisterError, WriteRegisterError},
-    FromByteArray, ReadableRegister, ToByteArray as _, WritableRegister,
+    Command, FromByteArray, ReadableRegister, ToByteArray, WritableRegister,
 };
 
 pub mod r#async {
@@ -59,6 +60,43 @@ pub mod r#async {
             .await
             .map_err(WriteRegisterError::BusError)
     }
+
+    #[allow(clippy::type_complexity)]
+    pub async fn invoke_command<D, C>(
+        device: &mut D,
+        cmd: C,
+    ) -> Result<
+        C::ResponseParameters,
+        CommandError<
+            D::Error,
+            <C::CommandParameters as ToByteArray>::Error,
+            <C::ResponseParameters as FromByteArray>::Error,
+        >,
+    >
+    where
+        D: embedded_hal_async::spi::SpiDevice,
+        C: Command,
+    {
+        let cmd_buf = cmd
+            .invoking_parameters()
+            .to_bytes()
+            .map_err(CommandError::SerializationError)?;
+        let mut resp_buf = <C::ResponseParameters as FromByteArray>::Array::new();
+
+        // Register ID types have compiler enforced infallible byte conversions, thus this unwrap is safe
+        let reg_id = unsafe { C::id().to_bytes().unwrap_unchecked() };
+
+        device
+            .transaction(&mut [
+                embedded_hal::spi::Operation::Write(reg_id.as_ref()),
+                embedded_hal::spi::Operation::Write(cmd_buf.as_ref()),
+                embedded_hal::spi::Operation::Read(resp_buf.as_mut()),
+            ])
+            .await
+            .map_err(CommandError::BusError)?;
+
+        C::ResponseParameters::from_bytes(resp_buf).map_err(CommandError::DeserializationError)
+    }
 }
 
 pub mod blocking {
@@ -73,7 +111,7 @@ pub mod blocking {
         let mut buf = <R as FromByteArray>::Array::new();
 
         // Register ID types have compiler enforced infallible byte conversions, thus this unwrap is safe
-        let reg_id = R::readable_id().to_bytes().unwrap();
+        let reg_id = unsafe { R::readable_id().to_bytes().unwrap_unchecked() };
 
         device
             .transaction(&mut [
@@ -99,7 +137,7 @@ pub mod blocking {
             .map_err(WriteRegisterError::SerializationError)?;
 
         // Register ID types have compiler enforced infallible byte conversions, thus this unwrap is safe
-        let reg_id = R::writeable_id().to_bytes().unwrap();
+        let reg_id = unsafe { R::writeable_id().to_bytes().unwrap_unchecked() };
 
         device
             .transaction(&mut [
@@ -107,5 +145,41 @@ pub mod blocking {
                 embedded_hal::spi::Operation::Write(buf.as_ref()),
             ])
             .map_err(WriteRegisterError::BusError)
+    }
+
+    #[allow(clippy::type_complexity)]
+    pub fn invoke_command<D, C>(
+        device: &mut D,
+        cmd: C,
+    ) -> Result<
+        C::ResponseParameters,
+        CommandError<
+            D::Error,
+            <C::CommandParameters as ToByteArray>::Error,
+            <C::ResponseParameters as FromByteArray>::Error,
+        >,
+    >
+    where
+        D: embedded_hal::spi::SpiDevice,
+        C: Command,
+    {
+        let cmd_buf = cmd
+            .invoking_parameters()
+            .to_bytes()
+            .map_err(CommandError::SerializationError)?;
+        let mut resp_buf = <C::ResponseParameters as FromByteArray>::Array::new();
+
+        // Register ID types have compiler enforced infallible byte conversions, thus this unwrap is safe
+        let reg_id = unsafe { C::id().to_bytes().unwrap_unchecked() };
+
+        device
+            .transaction(&mut [
+                embedded_hal::spi::Operation::Write(reg_id.as_ref()),
+                embedded_hal::spi::Operation::Write(cmd_buf.as_ref()),
+                embedded_hal::spi::Operation::Read(resp_buf.as_mut()),
+            ])
+            .map_err(CommandError::BusError)?;
+
+        C::ResponseParameters::from_bytes(resp_buf).map_err(CommandError::DeserializationError)
     }
 }
