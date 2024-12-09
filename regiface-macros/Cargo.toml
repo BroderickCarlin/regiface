@@ -1,7 +1,7 @@
 [package]
 name = "regiface-macros"
 description = "This crate implements the macros for the regiface crate"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 authors = ["Broderick Carlin <broderick.carlin@gmail.com>"]
 repository = "https://github.com/BroderickCarlin/regiface"
