@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, LitInt, parse::Parse, parse::ParseStream, Ident};
+use syn::{parse::Parse, parse::ParseStream, parse_macro_input, DeriveInput, Ident, LitInt};
 
 struct RegisterAttr {
     value: LitInt,
@@ -11,20 +11,20 @@ impl Parse for RegisterAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         // Parse the entire input as a single LitInt first
         let lit = input.parse::<LitInt>()?;
-        
+
         // Extract the type suffix from the literal
         let suffix = lit.suffix();
         if suffix.is_empty() {
-            return Err(syn::Error::new(lit.span(), "Expected type suffix (e.g., u8, u16)"));
+            return Err(syn::Error::new(
+                lit.span(),
+                "Expected type suffix (e.g., u8, u16)",
+            ));
         }
-        
+
         // Create an Ident from the suffix
         let ty = Ident::new(suffix, lit.span());
-        
-        Ok(RegisterAttr {
-            value: lit,
-            ty,
-        })
+
+        Ok(RegisterAttr { value: lit, ty })
     }
 }
 

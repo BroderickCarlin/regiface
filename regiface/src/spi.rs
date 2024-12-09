@@ -81,7 +81,7 @@ pub mod blocking {
                 embedded_hal::spi::Operation::Read(buf.as_mut()),
             ])
             .map_err(ReadRegisterError::BusError)?;
- 
+
         R::from_bytes(buf).map_err(ReadRegisterError::DeserializationError)
     }
 

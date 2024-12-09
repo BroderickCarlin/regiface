@@ -5,9 +5,9 @@
 //! external peripherals within an embedded environment. As such, some utility functions
 //! are provided for reading and writing registers on devices across I2C or SPI buses.
 //!
-//! This crate provides a single trait to be implemented by all types that represent a value that
-//! is stored within an addressable register, aptly named [`Register`]. This trait provides nothing
-//! more than a method for retrieving the ID associated with the given register.
+//! This crate provides two core traits:
+//! - [`Register`] for types that represent a value stored within an addressable register
+//! - [`Command`] for types that represent an invokable command with parameters and response
 //!
 //! ### Readable Registers
 //!
@@ -74,93 +74,62 @@
 //!     }
 //! }
 //! ```
+//!
+//! ### Commands
+//!
+//! A command represents an invokable action with optional parameters and response. Commands are
+//! implemented using the [`Command`] trait, which specifies both the command parameters and expected
+//! response type. For commands or responses without parameters, the [`NoParameters`] type can be used.
+//!
+//! #### Command Implementation Example
+//!
+//! ```rust
+//! use regiface::{Command, ToByteArray, FromByteArray, NoParameters};
+//!
+//! struct GetTemperature;
+//!
+//! impl Command for GetTemperature {
+//!     type IdType = u8;
+//!     type CommandParameters = NoParameters;
+//!     type ResponseParameters = Temperature;
+//!
+//!     fn id() -> Self::IdType {
+//!         0x42
+//!     }
+//!
+//!     fn invoking_parameters(self) -> Self::CommandParameters {
+//!         NoParameters::default()
+//!     }
+//! }
+//!
+//! struct Temperature {
+//!     celsius: f32
+//! }
+//!
+//! impl FromByteArray for Temperature {
+//!     type Error = core::convert::Infallible;
+//!     type Array = [u8; 4];
+//!
+//!     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+//!         let celsius = f32::from_be_bytes(bytes);
+//!         Ok(Self { celsius })
+//!     }
+//! }
+//! ```
 
 pub use byte_array::{FromByteArray, ToByteArray};
+pub use command::*;
 pub use regiface_macros::{register, ReadableRegister, WritableRegister};
+pub use register::*;
 
 pub mod byte_array;
+mod command;
 pub mod errors;
 pub mod i2c;
-pub mod register_id;
+pub mod id;
+mod register;
 pub mod spi;
 
-/// The core trait to be implemented for all types that represent readable or writable register values
-///
-/// This trait provides minimal value on its own, but is a building block to be combined with either [`ReadableRegister`]
-/// or [`WritableRegister`].
-pub trait Register {
-    /// The type used to represent the register's ID.
-    ///
-    /// Register ID types are any type that implement the [`RegisterId`](register_id::RegisterId) trait. This
-    /// trait provides default implementations for [`u8`], [`u16`], [`u32`], [`u64`], and [`u128`].
-    type IdType: register_id::RegisterId;
-
-    /// A method that returns the ID of the register for the associated type
-    fn id() -> Self::IdType;
-}
-
-/// A marker trait that represents a type that can be retrieved by reading a register
-///
-/// This trait can be manually implemented, or may be derived as such
-///
-/// ```
-/// use regiface::{register, ReadableRegister, FromByteArray};
-///
-/// #[register(42u8)]
-/// #[derive(ReadableRegister, Debug)]
-/// pub struct MyRegister {
-///     foo: u8
-/// }
-///
-/// impl FromByteArray for MyRegister {
-///     type Error = core::convert::Infallible;
-///     type Array = [u8; 1];
-///
-///     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
-///         Ok(Self { foo: bytes[0] })
-///     }
-/// }
-/// ```
-pub trait ReadableRegister: Register + FromByteArray {
-    /// Some implementations may specify a different register ID to be used when reading the register.
-    ///
-    /// Override the function if you need to specify an ID value different than that specified by the [`Register`]
-    /// implementation for the purpose of writing from the register
-    #[inline]
-    fn readable_id() -> Self::IdType {
-        Self::id()
-    }
-}
-
-/// A marker trait that represents a type that can be written into a register
-///
-/// This trait can be manually implemented, or may be derived as such
-///
-/// ```
-/// use regiface::{register, WritableRegister, ToByteArray};
-///
-/// #[register(42u8)]
-/// #[derive(WritableRegister, Debug)]
-/// pub struct MyRegister {
-///     foo: u8
-/// }
-///
-/// impl ToByteArray for MyRegister {
-///     type Error = core::convert::Infallible;
-///     type Array = [u8; 1];
-///
-///     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
-///         Ok([self.foo])
-///     }
-/// }
-/// ```
-pub trait WritableRegister: Register + ToByteArray {
-    /// Some implementations may specify a different register ID to be used when writing the register.
-    ///
-    /// Override the function if you need to specify an ID value different than that specified by the [`Register`]
-    /// implementation for the purpose of writing to the register
-    #[inline]
-    fn writeable_id() -> Self::IdType {
-        Self::id()
-    }
-}
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Default)]
+pub struct NoParameters {}

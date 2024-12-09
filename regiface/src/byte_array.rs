@@ -1,5 +1,7 @@
 use std::convert::Infallible;
 
+use crate::NoParameters;
+
 pub trait ByteArray: private::Sealed {
     fn new() -> Self;
     fn as_ref(&self) -> &[u8];
@@ -42,6 +44,15 @@ pub trait FromByteArray: Sized {
     type Array: ByteArray;
 
     fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error>;
+}
+
+impl FromByteArray for NoParameters {
+    type Error = Infallible;
+    type Array = [u8; 0];
+
+    fn from_bytes(_: Self::Array) -> Result<Self, Self::Error> {
+        Ok(Self {})
+    }
 }
 
 impl FromByteArray for u8 {
@@ -115,6 +126,15 @@ pub trait ToByteArray {
     type Array: ByteArray;
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error>;
+}
+
+impl ToByteArray for NoParameters {
+    type Error = Infallible;
+    type Array = [u8; 0];
+
+    fn to_bytes(self) -> Result<Self::Array, Self::Error> {
+        Ok([])
+    }
 }
 
 impl ToByteArray for u8 {
