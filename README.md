@@ -121,7 +121,7 @@ impl ToByteArray for Configuration {
     type Array = [u8; 3];
     type Error = &'static str;
 
-    fn to_bytes(&self) -> Result<Self::Array, Self::Error> {
+    fn to_bytes(self) -> Result<Self::Array, Self::Error> {
         let mut bytes = [0u8; 3];
         bytes[0..2].copy_from_slice(&self.sample_rate.to_be_bytes());
         bytes[2] = self.enabled as u8;
@@ -141,7 +141,7 @@ impl ToByteArray for CalibrationParams {
     type Array = [u8; 4];
     type Error = &'static str;
 
-    fn to_bytes(&self) -> Result<Self::Array, Self::Error> {
+    fn to_bytes(self) -> Result<Self::Array, Self::Error> {
         Ok(self.reference_temp.to_be_bytes())
     }
 }
@@ -169,7 +169,7 @@ impl Command for Calibrate {
         0xF0.into()
     }
 
-    fn invoking_parameters(&self) -> Self::CommandParameters {
+    fn invoking_parameters(self) -> Self::CommandParameters {
         CalibrationParams {
             reference_temp: 25.0,
         }
