@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/BroderickCarlin/regiface/compare/regiface-v0.1.4...regiface-v0.2.0) - 2024-12-09
+
+### Added
+
+- Add invoke_command function pair
+- [**breaking**] Add Command trait to represent invocable commands
+- add register attribute macro for simplified register definition
+
+### Other
+
+- add comprehensive documentation for I2C/SPI modules
+
 ## [0.1.4](https://github.com/BroderickCarlin/regiface/compare/regiface-v0.1.3...regiface-v0.1.4) - 2024-02-12
 
 ### Fixed
