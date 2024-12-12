@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/BroderickCarlin/regiface/compare/regiface-v0.2.0...regiface-v0.2.1) - 2024-12-12
+
+### Fixed
+
+- Remove ThisError dependancy
+
 ## [0.2.0](https://github.com/BroderickCarlin/regiface/compare/regiface-v0.1.4...regiface-v0.2.0) - 2024-12-09
 
 ### Added
