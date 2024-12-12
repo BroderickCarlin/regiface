@@ -1,3 +1,4 @@
+#![no_std]
 //! ## Overview
 //!
 //! This crate provides a handful of utility types for writing abstractions for interfacing with
