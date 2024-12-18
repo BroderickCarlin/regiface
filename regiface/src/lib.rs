@@ -118,9 +118,9 @@
 //! }
 //! ```
 
-pub use byte_array::{FromByteArray, ToByteArray};
+pub use byte_array::*;
 pub use command::*;
-pub use regiface_macros::{register, ReadableRegister, WritableRegister};
+pub use regiface_macros::*;
 pub use register::*;
 
 pub mod byte_array;
