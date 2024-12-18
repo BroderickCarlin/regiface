@@ -88,7 +88,7 @@ Here's a complete example showing how to use registers and commands with both I2
 ```rust
 use regiface::{
     register, Command, FromByteArray, ReadableRegister, ToByteArray, WritableRegister,
-    NoParameters,
+    NoParameters, errors::Error,
 };
 
 // Temperature register that can be read
@@ -179,13 +179,12 @@ impl Command for Calibrate {
 // Using with I2C (async)
 use embedded_hal_async::i2c::I2c;
 
-async fn use_i2c_device<D: I2c<u8>>(i2c: &mut D) {
+async fn use_i2c_device<D: I2c<u8>>(i2c: &mut D) -> Result<(), Error> {
     const DEVICE_ADDR: u8 = 0x48;
 
     // Read temperature (type inference)
     let temp: Temperature = regiface::i2c::r#async::read_register(i2c, DEVICE_ADDR)
-        .await
-        .unwrap();
+        .await?;
     println!("Temperature: {}°C", temp.celsius);
 
     // Write configuration
@@ -194,8 +193,7 @@ async fn use_i2c_device<D: I2c<u8>>(i2c: &mut D) {
         enabled: true,
     };
     regiface::i2c::r#async::write_register(i2c, DEVICE_ADDR, config)
-        .await
-        .unwrap();
+        .await?;
 
     // Execute calibration command
     let result: CalibrationResponse = regiface::i2c::r#async::invoke_command(
@@ -203,17 +201,18 @@ async fn use_i2c_device<D: I2c<u8>>(i2c: &mut D) {
         DEVICE_ADDR,
         Calibrate,
     )
-    .await
-    .unwrap();
+    .await?;
     println!("Calibration offset: {}", result.offset);
+    
+    Ok(())
 }
 
 // Using with SPI (blocking)
 use embedded_hal::spi::SpiDevice;
 
-fn use_spi_device<D: SpiDevice>(spi: &mut D) {
+fn use_spi_device<D: SpiDevice>(spi: &mut D) -> Result<(), Error> {
     // Read temperature (type inference)
-    let temp: Temperature = regiface::spi::blocking::read_register(spi).unwrap();
+    let temp: Temperature = regiface::spi::blocking::read_register(spi)?;
     println!("Temperature: {}°C", temp.celsius);
 
     // Write configuration
@@ -221,12 +220,14 @@ fn use_spi_device<D: SpiDevice>(spi: &mut D) {
         sample_rate: 100,
         enabled: true,
     };
-    regiface::spi::blocking::write_register(spi, config).unwrap();
+    regiface::spi::blocking::write_register(spi, config)?;
 
     // Execute calibration command
     let result: CalibrationResponse =
-        regiface::spi::blocking::invoke_command(spi, Calibrate).unwrap();
+        regiface::spi::blocking::invoke_command(spi, Calibrate)?;
     println!("Calibration offset: {}", result.offset);
+    
+    Ok(())
 }
 ```
 
