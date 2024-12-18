@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4](https://github.com/BroderickCarlin/regiface/compare/regiface-v0.2.3...regiface-v0.2.4) - 2024-12-18
+
+### Added
+
+- Add a high level error type to simplify error handling
+
 ## [0.2.3](https://github.com/BroderickCarlin/regiface/compare/regiface-v0.2.2...regiface-v0.2.3) - 2024-12-18
 
 ### Fixed
