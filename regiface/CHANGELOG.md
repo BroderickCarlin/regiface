@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3](https://github.com/BroderickCarlin/regiface/compare/regiface-v0.2.2...regiface-v0.2.3) - 2024-12-18
+
+### Fixed
+
+- Expose ByteArray trait
+
+### Other
+
+- Merge pull request [#16](https://github.com/BroderickCarlin/regiface/pull/16) from BroderickCarlin/release-plz-2024-12-13T01-13-46Z
+
 ## [0.2.2](https://github.com/BroderickCarlin/regiface/compare/regiface-v0.2.1...regiface-v0.2.2) - 2024-12-13
 
 ### Fixed
