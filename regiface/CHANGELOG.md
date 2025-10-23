@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5](https://github.com/BroderickCarlin/regiface/compare/regiface-v0.2.4...regiface-v0.2.5) - 2025-10-23
+
+### Other
+
+- Add Zeros as an option for commands
+
 ## [0.2.4](https://github.com/BroderickCarlin/regiface/compare/regiface-v0.2.3...regiface-v0.2.4) - 2024-12-18
 
 ### Added
