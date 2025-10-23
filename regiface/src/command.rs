@@ -64,3 +64,19 @@ pub trait Command {
     /// A method to retrieve the parameters from an instance of the [`Command`]
     fn invoking_parameters(self) -> Self::CommandParameters;
 }
+
+/// A utility type for use when defining a [`Command`] that should pass no parameters, or
+/// a [`Command`] that returns no parameters.
+///
+/// Instances of [`NoParameters`] should be constructed using the `default()` implementation
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Default)]
+pub struct NoParameters {}
+
+/// A utility type for use when defining a [`Command`] that should pass a set of zero
+/// values as its command parameters.
+///
+/// Instances of [`Zeros`] should be constructed using the `default()` implementation
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Default)]
+pub struct Zeros<const N: usize = 0> {}

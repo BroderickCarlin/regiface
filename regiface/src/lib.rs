@@ -130,7 +130,3 @@ pub mod i2c;
 pub mod id;
 mod register;
 pub mod spi;
-
-#[non_exhaustive]
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Default)]
-pub struct NoParameters {}

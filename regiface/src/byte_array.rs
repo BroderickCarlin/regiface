@@ -1,6 +1,6 @@
 use core::convert::Infallible;
 
-use crate::NoParameters;
+use crate::{NoParameters, Zeros};
 
 pub trait ByteArray: private::Sealed {
     fn new() -> Self;
@@ -100,6 +100,15 @@ impl FromByteArray for u128 {
     }
 }
 
+impl<const LEN: usize> FromByteArray for [u8; LEN] {
+    type Error = Infallible;
+    type Array = Self;
+
+    fn from_bytes(bytes: Self::Array) -> Result<Self, Self::Error> {
+        Ok(bytes)
+    }
+}
+
 #[cfg(feature = "packed_struct")]
 impl<V, const LEN: usize> FromByteArray for V
 where
@@ -134,6 +143,15 @@ impl ToByteArray for NoParameters {
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
         Ok([])
+    }
+}
+
+impl<const LEN: usize> ToByteArray for Zeros<LEN> {
+    type Error = Infallible;
+    type Array = [u8; LEN];
+
+    fn to_bytes(self) -> Result<Self::Array, Self::Error> {
+        Ok([0; LEN])
     }
 }
 
@@ -179,6 +197,15 @@ impl ToByteArray for u128 {
 
     fn to_bytes(self) -> Result<Self::Array, Self::Error> {
         Ok(self.to_be_bytes())
+    }
+}
+
+impl<const LEN: usize> ToByteArray for [u8; LEN] {
+    type Error = Infallible;
+    type Array = Self;
+
+    fn to_bytes(self) -> Result<Self::Array, Self::Error> {
+        Ok(self)
     }
 }
 
